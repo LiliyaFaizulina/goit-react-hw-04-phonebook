@@ -1,5 +1,8 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import { ContactForm } from './ContactForm/ContactForm';
 import { ContactList } from './ContactList/ContactList';
 import { SearchFilter } from './SearchFilter/SearchFilter';
@@ -7,18 +10,19 @@ import { Head, SubHead, Container } from './App.styled';
 
 const CONTACTS_KEY = 'contacts';
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+export const App = () => {
+  const [contacts, setContacts] = useState(
+    () => JSON.parse(localStorage.getItem(CONTACTS_KEY)) ?? []
+  );
+  const [filter, setFilter] = useState('');
 
-  updateContactList = newContact => {
-    const { contacts } = this.state;
+  const notify = name => toast(`${name} is already in contacts`);
+
+  const updateContactList = newContact => {
     const newName = newContact.name.toLowerCase();
 
     if (contacts.some(contact => contact.name.toLowerCase() === newName)) {
-      alert(`${newContact.name} is already in contacts`);
+      notify(newContact.name);
       return;
     }
 
@@ -27,42 +31,27 @@ export class App extends Component {
       ...newContact,
     };
 
-    this.setState(prevState => ({
-      contacts: [contact, ...prevState.contacts],
-    }));
+    setContacts(prevContacts => [...prevContacts, contact]);
   };
 
-  filterContacts = e => {
+  const filterContacts = e => {
     const value = e.target.value.toLowerCase();
-    this.setState({ filter: value });
+    setFilter(value);
   };
 
-  deleteContact = id => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== id),
-    }));
+  const deleteContact = id => {
+    setContacts(prevContacts =>
+      prevContacts.filter(contact => contact.id !== id)
+    );
   };
 
-  componentDidMount() {
-    const savedContacts = localStorage.getItem(CONTACTS_KEY);
-    if (savedContacts) this.setState({ contacts: JSON.parse(savedContacts) });
-  }
+  useEffect(() => {
+    localStorage.setItem(CONTACTS_KEY, JSON.stringify(contacts));
+  }, [contacts]);
 
-  componentDidUpdate(_, prevState) {
-    const { contacts } = this.state;
-    if (contacts !== prevState.contacts) {
-      localStorage.setItem(CONTACTS_KEY, JSON.stringify(contacts));
-    }
-  }
-
-  render() {
-    const {
-      updateContactList,
-      state: { contacts, filter },
-      filterContacts,
-      deleteContact,
-    } = this;
-    return (
+  return (
+    <>
+      <ToastContainer position="top-center" />
       <Container>
         <Head>Phonebook</Head>
         <ContactForm
@@ -77,6 +66,6 @@ export class App extends Component {
           deleteContact={deleteContact}
         />
       </Container>
-    );
-  }
-}
+    </>
+  );
+};

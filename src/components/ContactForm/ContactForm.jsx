@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Form, FormButton, Label } from './ContactForm.styled';
 
@@ -7,66 +7,62 @@ const nameCheckMessage =
 const telCheckMessage =
   'Phone number must be digits and can contain spaces, dashes, parentheses and can start with +';
 
-export class ContactForm extends Component {
-  state = {
-    name: '',
-    number: '',
-  };
+export const ContactForm = ({ updateContactList }) => {
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
 
-  static propTypes = {
-    updateContactList: PropTypes.func.isRequired,
-  };
-
-  handleInput = e => {
+  const handleInput = e => {
     const { name, value } = e.target;
-    this.setState({ [name]: value });
+    switch (name) {
+      case 'name':
+        setName(value);
+        break;
+      case 'number':
+        setNumber(value);
+        break;
+      default:
+        return;
+    }
   };
 
-  handleSubmit = e => {
+  const handleSubmit = e => {
     e.preventDefault();
-    const { updateContactList } = this.props;
-    updateContactList(this.state);
-    this.reset();
+    updateContactList({ name, number });
+    setName('');
+    setNumber('');
   };
 
-  reset() {
-    this.setState({ name: '', number: '' });
-  }
+  return (
+    <Form onSubmit={handleSubmit}>
+      <Label>
+        Name
+        <input
+          onChange={handleInput}
+          type="text"
+          name="name"
+          value={name}
+          pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
+          title={nameCheckMessage}
+          required
+        />
+      </Label>
+      <Label>
+        Number
+        <input
+          onChange={handleInput}
+          type="tel"
+          name="number"
+          value={number}
+          pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
+          title={telCheckMessage}
+          required
+        />
+      </Label>
+      <FormButton type="submit">Add contact</FormButton>
+    </Form>
+  );
+};
 
-  render() {
-    const {
-      state: { name, number },
-      handleInput,
-      handleSubmit,
-    } = this;
-    return (
-      <Form onSubmit={handleSubmit}>
-        <Label>
-          Name
-          <input
-            onChange={handleInput}
-            type="text"
-            name="name"
-            value={name}
-            pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-            title={nameCheckMessage}
-            required
-          />
-        </Label>
-        <Label>
-          Number
-          <input
-            onChange={handleInput}
-            type="tel"
-            name="number"
-            value={number}
-            pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-            title={telCheckMessage}
-            required
-          />
-        </Label>
-        <FormButton type="submit">Add contact</FormButton>
-      </Form>
-    );
-  }
-}
+ContactForm.propTypes = {
+  updateContactList: PropTypes.func.isRequired,
+};
